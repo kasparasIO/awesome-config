@@ -20,14 +20,18 @@ local function create_tasklist(s)
         screen  = s,
         filter  = awful.widget.tasklist.filter.currenttags,
         buttons = tasklist_buttons,
+        style = {
+        font = "sans 12"
+        },
         widget_template = {
+        {
             {
                 {
                     {
                         id = 'icon_role',
                         widget = wibox.widget.imagebox,
-                        forced_height = 22,
-                        forced_width = 22,
+                        forced_height = 24,
+                        forced_width = 24,
                     },
                       widget = wibox.container.place,
                       halign = "center",
@@ -43,10 +47,13 @@ local function create_tasklist(s)
                 },
                 layout = wibox.layout.fixed.horizontal,
             },
-            left  = 12,
-            right = 12,
-            widget = wibox.container.margin
-        }
+            left  = 4,
+            right = 4,
+            widget = wibox.container.margin,
+        },
+        id = 'background_role',
+        widget = wibox.container.background
+      },
     }
 end
 

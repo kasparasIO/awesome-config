@@ -89,11 +89,12 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 -- }}}
 
 -- Keyboard map indicator and switcher
-mykeyboardlayout = awful.widget.keyboardlayout()
+local keyboardlayout = awful.widget.keyboardlayout()
 
 -- {{{ Wibar
 -- Create a textclock widget
-mytextclock = wibox.widget.textclock()
+local textclock = wibox.widget.textclock()
+textclock.font = "sans 12"
 
 local function set_wallpaper(s)
     -- Wallpaper
@@ -144,9 +145,9 @@ awful.screen.connect_for_each_screen(function(s)
         s.tasklist, -- Middle widget
         { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
-            mykeyboardlayout,
+            keyboardlayout,
             wibox.widget.systray(),
-            mytextclock,
+            textclock,
             s.mylayoutbox,
         },
     }
@@ -211,14 +212,6 @@ end
 clientbuttons = gears.table.join(
     awful.button({ }, 1, function (c)
         c:emit_signal("request::activate", "mouse_click", {raise = true})
-    end),
-    awful.button({ modkey }, 1, function (c)
-        c:emit_signal("request::activate", "mouse_click", {raise = true})
-        awful.mouse.client.move(c)
-    end),
-    awful.button({ modkey }, 3, function (c)
-        c:emit_signal("request::activate", "mouse_click", {raise = true})
-        awful.mouse.client.resize(c)
     end)
 )
 
