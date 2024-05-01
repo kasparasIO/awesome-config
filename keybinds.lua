@@ -5,20 +5,27 @@ local hotkeys_popup = require("awful.hotkeys_popup")
 
 local M = {};
 local modkey  = "Mod4"
+
+local brightness = 100
+
+local function increment_brightness()
+  if brightness < 100 then
+    brightness = brightness + 10
+    awful.spawn("brightnessctl set "..brightness.."%")
+  end
+end
+
+local function decrement_brightness()
+  if brightness - 10  >= 10 then
+    brightness = brightness - 10
+    awful.spawn("brightnessctl set "..brightness.."%")
+  end
+end
+
 M.globalkeys = gears.table.join(
     awful.key(
     { modkey,}, "s", hotkeys_popup.show_help,
     {description="show help", group="awesome"}),
-
-    awful.key(
-    { modkey }, "Left", awful.tag.viewprev,
-    {description = "view previous", group = "tag"}),
-
-    awful.key({ modkey }, "Right",  awful.tag.viewnext,
-    {description = "view next", group = "tag"}),
-
-    awful.key({ modkey }, "Escape", awful.tag.history.restore,
-    {description = "go back", group = "tag"}),
 
     awful.key({ modkey }, "j",function () awful.client.focus.byidx( 1) end,
     {description = "focus next by index", group = "client"}
@@ -40,18 +47,6 @@ M.globalkeys = gears.table.join(
     awful.key({ modkey, "Control" }, "k", function () awful.screen.focus_relative(-1) end,
     {description = "focus the previous screen", group = "screen"}),
 
-    awful.key({ modkey }, "u", awful.client.urgent.jumpto,
-    {description = "jump to urgent client", group = "client"}),
-
-    awful.key({ modkey }, "Tab", 
-      function ()
-          awful.client.focus.history.previous()
-          if client.focus then
-              client.focus:raise()
-          end
-        end,
-        {description = "go back", group = "client"}),
-
     -- Standard program
     awful.key({ modkey}, "Return", function () awful.spawn(terminal) end,
     {description = "open a terminal", group = "launcher"}),
@@ -68,7 +63,7 @@ M.globalkeys = gears.table.join(
     awful.key({ modkey }, "h", function () awful.tag.incmwfact(-0.1) end,
     {description = "decrease master width factor", group = "layout"}),
 
-    awful.key({ modkey, "Shift"}, "h", function () awful.tag.incnmaster( 1, nil, true) end,
+    awful.key({ modkey, "Shift"}, "m", function () awful.tag.incnmaster( 1, nil, true) end,
     {description = "increase the number of master clients", group = "layout"}),
 
     awful.key({ modkey, "Shift"}, "l",function () awful.tag.incnmaster(-1, nil, true) end,
@@ -99,21 +94,27 @@ M.globalkeys = gears.table.join(
     {description = "restore minimized", group = "client"}),
     -- Menubar
     awful.key({ modkey }, "p", function() menubar.show() end,
-              {description = "show the menubar", group = "launcher"})
+    {description = "show the menubar", group = "launcher"}),
+
+    awful.key({modkey, "Shift"}, "=", function () increment_brightness() end,
+    {description = "increment brightness", group = "custom"}),
+
+    awful.key({modkey, "Shift"}, "-", function () decrement_brightness() end,
+    {description = "decrement brightness", group = "custom"})
+
 )
 
 M.clientkeys = gears.table.join(
-    awful.key({modkey}, "f",
+    awful.key({modkey, "Shift"}, "f",
         function (c)
-            c.fullscreen = not c.fullscreen
             c:raise()
         end,
     {description = "toggle fullscreen", group = "client"}),
 
-    awful.key({ modkey, "Control" }, "c", function (c) c:kill()  end,
+    awful.key({ modkey, "Control" }, "w", function (c) c:kill()  end,
     {description = "close", group = "client"}),
 
-    awful.key({ modkey, "Shift" }, "f",  awful.client.floating.toggle                     ,
+    awful.key({ modkey }, "f",  awful.client.floating.toggle                     ,
     {description = "toggle floating", group = "client"}),
 
     awful.key({ modkey, "Shift" }, "Return", function (c) c:swap(awful.client.getmaster()) end,
@@ -137,14 +138,14 @@ M.clientkeys = gears.table.join(
         end,
         {description = "(un)maximize", group = "client"}),
 
-    awful.key({ modkey, "Control" }, "m",
+    awful.key({ modkey, "Shift" }, "v",
         function (c)
             c.maximized_vertical = not c.maximized_vertical
             c:raise()
         end,
         {description = "(un)maximize vertically", group = "client"}),
 
-    awful.key({ modkey, "Shift" }, "m",
+    awful.key({ modkey, "Shift" }, "h",
         function (c)
             c.maximized_horizontal = not c.maximized_horizontal
             c:raise()
