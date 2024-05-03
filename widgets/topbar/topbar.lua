@@ -6,7 +6,9 @@ local theme = require("theme.theme")
 local date = require("widgets.topbar.date")
 local taglist = require("widgets.topbar.taglist")
 local layout_widget  = require("widgets.topbar.layoutw")
-local battery = require("widgets.topbar.baterry")
+local battery = require("widgets.topbar.battery")
+local audio = require("widgets.topbar.audio.audio")
+local netwidgets = require("widgets.net_widgets")
 local dpi = beautiful.xresources.apply_dpi
 
 local function M (s)
@@ -44,7 +46,12 @@ local function M (s)
     end
   )
     local layoutw = layout_widget(s)
-
+    local wireless = wibox.container.place(wibox.container.constraint(
+    netwidgets.wireless({interface = "wlo1"}),
+    "exact",
+    dpi(22),
+    dpi(22)
+  ))
 
     local wibar = awful.wibar({
         position = "top",
@@ -73,17 +80,26 @@ local function M (s)
               taglist_container,
               }
             },
-      },
+          },
         },
         { -- Middle widgets
-           layout = wibox.layout.fixed.horizontal,
+           layout = wibox.layout.align.horizontal,
            date,
         },
         { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
-            battery({
-            main_color = theme.primary_light
+            spacing = dpi(8),
+            audio({
+                widget_type = "horizontal_bar",
+                with_icon = true
             }),
+            battery({
+            main_color = theme.primary_light,
+            show_current_level = true,
+            size = dpi(28),
+            font = "sans 10"
+            }),
+            wireless,
             layoutw,
         }
     }

@@ -45,25 +45,6 @@ awful.screen.connect_for_each_screen(function(s)
     -- Create a tasklist widget
     s.tasklist = create_tasklist(s)
 
-    -- Create the wibox
-    s.mywibox = awful.wibar({ position = "top", screen = s })
-
-    -- Add widgets to the wibox
-    s.mywibox:setup {
-        layout = wibox.layout.align.horizontal,
-        { -- Left widgets
-            layout = wibox.layout.fixed.horizontal,
-            s.taglist,
-        },
-        s.tasklist, -- Middle widget
-        { -- Right widgets
-            layout = wibox.layout.fixed.horizontal,
-            keyboardlayout,
-            wibox.widget.systray(),
-            textclock,
-            s.layoutbox,
-        },
-    }
+    -- topbar
   topbar(s)
-  -- new topbar
 end)

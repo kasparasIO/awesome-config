@@ -46,10 +46,14 @@ M.globalkeys = gears.table.join(
 
     awful.key({ modkey, "Control" }, "k", function () awful.screen.focus_relative(-1) end,
     {description = "focus the previous screen", group = "screen"}),
-
+    awful.key({}, "Print", function () awful.spawn("flameshot gui") end,
+    {description = "take screenshot", group = "custom"}),
     -- Standard program
     awful.key({ modkey}, "Return", function () awful.spawn(terminal) end,
     {description = "open a terminal", group = "launcher"}),
+    
+    awful.key({modkey, "Control"}, "b", function() awful.spawn("chromium") end,
+    {description = "open browser", group = "custom"}),
 
     awful.key({ modkey, "Control" }, "r", awesome.restart,
     {description = "reload awesome", group = "awesome"}),
