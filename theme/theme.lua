@@ -5,31 +5,33 @@
 local theme_assets = require("beautiful.theme_assets")
 local xresources = require("beautiful.xresources")
 local dpi = xresources.apply_dpi
-
+local gears = require("gears")
 local gfs = require("gears.filesystem")
 local themes_path = gfs.get_configuration_dir() .. "/theme"
 
 local theme = {}
 
-theme.font          = "sans 10"
-
-theme.bg_normal     = "#222222"
+theme.font          = "RobotoMono Nerd Font"
+theme.bg_normal     = "#080808"
 theme.bg_focus      = "#000000"
 theme.bg_urgent     = "#ff0000"
 theme.bg_minimize   = "#444444"
 theme.bg_systray    = theme.bg_normal
 
-theme.fg_normal     = "#aaaaaa"
+theme.fg_normal     = "#ffffff"
 theme.fg_focus      = "#ffffff"
 theme.fg_urgent     = "#ffffff"
 theme.fg_minimize   = "#ffffff"
 
-theme.useless_gap   = dpi(5)
+theme.useless_gap   = dpi(4)
 theme.border_width  = dpi(1)
 theme.border_normal = "#000000"
 theme.border_focus  = "#535d6c"
 theme.border_marked = "#91231c"
 
+theme.primary = "#142957"
+theme.primary_light = "#184190"
+theme.primary_dark = "#09142a"
 -- There are other variable sets
 -- overriding the default one when
 -- defined, the sets are:

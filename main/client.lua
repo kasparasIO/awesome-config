@@ -6,7 +6,7 @@ local create_taglist = require("widgets.taglist")
 local create_tasklist = require("widgets.tasklist")
 local textclock = require("widgets.textclock")
 local keyboardlayout = require("widgets.keyboard_layout")
-
+local topbar = require("widgets.topbar.topbar")
 
 
 local function set_wallpaper(s)
@@ -29,7 +29,7 @@ awful.screen.connect_for_each_screen(function(s)
     set_wallpaper(s)
 
     -- Each screen has its own tag table.
-    awful.tag({ "1", "2", "3", "4" }, s, awful.layout.layouts[1])
+    awful.tag({ "1", "2", "3", "4", "5" }, s, awful.layout.layouts[1])
 
     -- Create an imagebox widget which will contain an icon indicating which layout we're using.
     -- We need one layoutbox per screen.
@@ -64,4 +64,6 @@ awful.screen.connect_for_each_screen(function(s)
             s.layoutbox,
         },
     }
+  topbar(s)
+  -- new topbar
 end)
