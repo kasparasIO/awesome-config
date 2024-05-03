@@ -4,7 +4,9 @@ local wibox = require("wibox")
 local gears = require("gears")
 local theme = require("theme.theme")
 local date = require("widgets.topbar.date")
-local fancy_taglist = require("widgets.topbar.taglist") -- Assuming this is the correct path to your fancy_taglist module
+local taglist = require("widgets.topbar.taglist")
+local layout_widget  = require("widgets.topbar.layoutw")
+local battery = require("widgets.topbar.baterry")
 local dpi = beautiful.xresources.apply_dpi
 
 local function M (s)
@@ -29,18 +31,19 @@ local function M (s)
     )
 
     -- Initialize the fancy taglist for this screen
-    local _taglist = fancy_taglist.new({
+    local _taglist = taglist.new({
         screen = s,
         taglist = { buttons = mytagbuttons },
         tasklist = { buttons = mytasklistbuttons }
     })
-    local taglist = wibox.container.background(
+    local taglist_container = wibox.container.background(
     wibox.container.margin(_taglist, dpi(16), dpi(16), dpi(4), dpi(4)),
     theme.primary_dark,
     function (cr, w, h)
       gears.shape.rounded_rect(cr, w, h, dpi(18))
     end
   )
+    local layoutw = layout_widget(s)
 
 
     local wibar = awful.wibar({
@@ -55,7 +58,7 @@ local function M (s)
     -- Setup the wibar
     wibar:setup {
         layout = wibox.layout.align.horizontal,
-        expand = "outside",
+        expand = "none",
         { -- Left widgets
             layout = wibox.layout.fixed.horizontal,
             {
@@ -67,17 +70,21 @@ local function M (s)
               left = dpi(4),
               {
               layout = wibox.layout.fixed.horizontal,
-              taglist,
+              taglist_container,
               }
             },
       },
         },
         { -- Middle widgets
-           layout = wibox.layout.flex.horizontal,
-            date,
+           layout = wibox.layout.fixed.horizontal,
+           date,
         },
         { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
+            battery({
+            main_color = theme.primary_light
+            }),
+            layoutw,
         }
     }
 
