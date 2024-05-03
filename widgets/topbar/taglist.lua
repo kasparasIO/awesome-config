@@ -44,7 +44,9 @@ local function constrain_icon(widget)
       strategy = 'exact',
       widget = wibox.container.constraint
     },
-    widget = wibox.container.place
+    widget = wibox.container.place,
+    halign = "right",
+    valign = "right"
   }
 end
 
@@ -58,7 +60,7 @@ local function fancy_tasklist(cfg, tag)
     filter = only_this_tag,
     layout = {
       layout = wibox.layout.fixed.horizontal,
-      spacing = dpi(4)
+      spacing = dpi(8)
     },
     widget_template = {
       id = "clienticon",
@@ -106,15 +108,29 @@ function module.new(cfg)
     style = {
       squares_sel = "",
       squares_unsel = "",
-      bg_focus = "#ffffff"
+      bg_focus = theme.primary_light,
+      bg_empty = theme.primary,
+      bg_occupied = theme.primary,
+      spacing = dpi(6),
+      shape = function (cr, w, h)
+        gears.shape.rounded_rect(cr, w, h, dpi(64))
+      end
     },
     widget_template = {
       box_margins {
         -- tag
         {
-          id = "text_role",
-          widget = wibox.widget.textbox,
-          align = "center"
+          widget = wibox.container.margin,
+          left = dpi(3),
+        },
+        {
+          widget = wibox.container.place,
+          {
+            widget = wibox.widget.imagebox,
+            image = "/home/aishaara/.config/awesome/theme/taglist/record.png",
+            forced_height = dpi(6),
+            forced_width = dpi(6)
+          },
         },
         -- tasklist
         constrain_icon {
@@ -123,8 +139,13 @@ function module.new(cfg)
         },
         id = "list_separator",
         spacing = dpi(6),
-        layout = wibox.layout.fixed.horizontal
+        layout = wibox.layout.fixed.horizontal,
+        {
+          widget = wibox.container.margin,
+          right = dpi(1),
+        },
       },
+      id = "background_role",
       widget = wibox.container.background,
       create_callback = create_callback,
       update_callback = update_callback,

@@ -29,14 +29,13 @@ local function M (s)
     )
 
     -- Initialize the fancy taglist for this screen
-    local new_taglist = fancy_taglist.new({
+    local _taglist = fancy_taglist.new({
         screen = s,
         taglist = { buttons = mytagbuttons },
         tasklist = { buttons = mytasklistbuttons }
     })
-    local margin_taglist = wibox.container.margin(new_taglist, dpi(8), dpi(8))
     local taglist = wibox.container.background(
-    margin_taglist,
+    wibox.container.margin(_taglist, dpi(16), dpi(16), dpi(4), dpi(4)),
     theme.primary_dark,
     function (cr, w, h)
       gears.shape.rounded_rect(cr, w, h, dpi(18))
@@ -48,7 +47,7 @@ local function M (s)
         position = "top",
         screen = s,
         stretch = true,
-        height = dpi(36),
+        height = dpi(42),
         bg = theme.bg_normal,
         fg = theme.fg_normal
     })
@@ -60,6 +59,10 @@ local function M (s)
         { -- Left widgets
             layout = wibox.layout.fixed.horizontal,
             {
+            widget = wibox.container.margin,
+            top = dpi(4),
+            bottom = dpi(4),
+            {
               widget = wibox.container.margin,
               left = dpi(4),
               {
@@ -67,9 +70,10 @@ local function M (s)
               taglist,
               }
             },
+      },
         },
         { -- Middle widgets
-            layout = wibox.layout.flex.horizontal,
+           layout = wibox.layout.flex.horizontal,
             date,
         },
         { -- Right widgets
