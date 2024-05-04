@@ -32,6 +32,8 @@ theme.border_marked = "#91231c"
 theme.primary = "#142957"
 theme.primary_light = "#184190"
 theme.primary_dark = "#09142a"
+theme.primary_darkest = "#040a15"
+
 -- There are other variable sets
 -- overriding the default one when
 -- defined, the sets are:

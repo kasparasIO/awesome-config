@@ -10,14 +10,14 @@ local brightness = 100
 
 local function increment_brightness()
   if brightness < 100 then
-    brightness = brightness + 10
+    brightness = brightness + 5
     awful.spawn("brightnessctl set "..brightness.."%")
   end
 end
 
 local function decrement_brightness()
-  if brightness - 10  >= 10 then
-    brightness = brightness - 10
+  if brightness - 5  >= 5 then
+    brightness = brightness - 5
     awful.spawn("brightnessctl set "..brightness.."%")
   end
 end

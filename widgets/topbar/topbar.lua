@@ -9,6 +9,7 @@ local layout_widget  = require("widgets.topbar.layoutw")
 local battery = require("widgets.topbar.battery")
 local audio = require("widgets.topbar.audio.audio")
 local netwidgets = require("widgets.net_widgets")
+local menu = require("widgets.topbar.menu.menu")
 local dpi = beautiful.xresources.apply_dpi
 
 local function M (s)
@@ -101,6 +102,15 @@ local function M (s)
             }),
             wireless,
             layoutw,
+            {
+              widget = wibox.container.margin,
+              left = dpi(22)
+            },
+            menu(),
+            {
+              widget = wibox.container.margin,
+              right = dpi(4)
+            },
         }
     }
 

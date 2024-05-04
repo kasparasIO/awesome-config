@@ -27,7 +27,10 @@ local icon_size = dpi(16)
 
 local function box_margins(widget)
   return {
-    { widget, widget = wibox.container.place },
+    {
+      widget,
+      widget = wibox.container.place
+    },
     top = box_height,
     bottom = box_height,
     left = box_width,
