@@ -1,0 +1,1 @@
+local beautiful = require("beautiful")

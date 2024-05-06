@@ -4,6 +4,7 @@ local wibox = require("wibox")
 local gears = require("gears")
 local theme = require("theme.theme")
 local dpi = beautiful.xresources.apply_dpi
+local todo = require("widgets.topbar.menu.todo.todo")
 
 local ICON_DIR = os.getenv("HOME") .. "/.config/awesome/theme/menu/"
 local menu_img = ICON_DIR .. "menu.png"
@@ -15,14 +16,12 @@ local function command_buttons()
         {
             {
                 {
-                    -- Image widget for restart
                     widget = wibox.widget.imagebox,
                     image = ICON_DIR .. "restart.png",
                     resize = true,
                     forced_width = dpi(48),
                     forced_height = dpi(48),
                 },
-                -- Place widget to center the imagebox
                 layout = wibox.container.place
             },
             buttons = awful.util.table.join(
@@ -34,7 +33,6 @@ local function command_buttons()
         {
           {
               {
-                  -- Image widget for sleep
                   widget = wibox.widget.imagebox,
                   image = ICON_DIR .. "sleep.png",
                   resize = true,
@@ -113,17 +111,16 @@ local function profile()
         shape = gears.shape.rounded_rect,
     }
 end
-
 local menu_popup = awful.popup {
     widget = {
         {
-          {
-            widget = wibox.container.margin,
-            profile()
-          },
             {
-                text   = "Item 2",
-                widget = wibox.widget.textbox
+                widget = wibox.container.margin,
+                profile(),
+            },
+            {
+                todo(), -- Assuming this returns the todo widget
+                layout = wibox.layout.fixed.horizontal,
             },
             layout = wibox.layout.fixed.vertical
         },
@@ -133,7 +130,7 @@ local menu_popup = awful.popup {
     ontop = true,
     visible = false,
     shape = function (cr, w, h)
-    gears.shape.rounded_rect(cr, w, h, dpi(4))
+        gears.shape.rounded_rect(cr, w, h, dpi(4))
     end
 }
 
