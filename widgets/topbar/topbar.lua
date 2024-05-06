@@ -11,7 +11,6 @@ local audio = require("widgets.topbar.audio.audio")
 local netwidgets = require("widgets.net_widgets")
 local menu = require("widgets.topbar.menu.menu")
 local dpi = beautiful.xresources.apply_dpi
-
 local function M (s)
     -- Define taglist and tasklist buttons if not defined elsewhere
     local mytagbuttons = awful.util.table.join(

@@ -1,324 +1,273 @@
-local awful = require("awful")
-local wibox = require("wibox")
-local json = require("json")
-local spawn = require("awful.spawn")
-local gears = require("gears")
-local beautiful = require("beautiful")
+local awful          = require("awful")
+local wibox          = require("wibox")
+local gears          = require("gears")
+local beautiful      = require("beautiful")
 local theme = require("theme.theme")
-local gfs = require("gears.filesystem")
+local dpi            = beautiful.xresources.apply_dpi
 
-local HOME_DIR = os.getenv("HOME")
-local WIDGET_DIR = HOME_DIR .. '/.config/awesome/widgets/topbar/menu/todo'
-local STORAGE = HOME_DIR .. '/.cache/awmw/todo-widget/todos.json'
-
-local GET_TODO_ITEMS = 'bash -c "cat ' .. STORAGE .. '"'
-
-local rows  = { layout = wibox.layout.fixed.vertical }
-local todo_widget = {}
-local update_widget
-todo_widget.widget = wibox.widget {
-    {
-        {
-            {
-                {
-                    id = "icon",
-                    forced_height = 16,
-                    forced_width = 16,
-                    widget = wibox.widget.imagebox
-                },
-                valign = 'center',
-                layout = wibox.container.place
-            },
-            {
-                id = "txt",
-                widget = wibox.widget.textbox
-            },
-            spacing = 4,
-            layout = wibox.layout.fixed.horizontal,
-        },
-        margins = 4,
-        layout = wibox.container.margin
-    },
-    shape = function(cr, width, height)
-        gears.shape.rounded_rect(cr, width, height, 4)
-    end,
-    widget = wibox.container.background,
-    set_text = function(self, new_value)
-        self:get_children_by_id("txt")[1].text = new_value
-    end,
-    set_icon = function(self, new_value)
-        self:get_children_by_id("icon")[1].image = new_value
-    end
-}
-
-function todo_widget:update_counter(todos)
-    local todo_count = 0
-    for _,p in ipairs(todos) do
-        if not p.status then
-            todo_count = todo_count + 1
-        end
-    end
-
-    todo_widget.widget:set_text(todo_count)
+local create_textbox = function(font, text, fg_color)
+	local textbox = wibox.widget {
+		markup = '<span color="' ..
+				fg_color .. '" font="' .. font .. '">' .. text .. '</span>',
+		widget = wibox.widget.textbox,
+	}
+	return textbox
 end
 
-local add_button = wibox.widget {
-    {
+local add_task       = create_textbox("RobotoMono Nerd Font 14", "    ", "#ffffff")
+local remove_all     = create_textbox("RobotoMono Nerd Font 14", "    ", "#ffffff")
+local prompt_textbox = create_textbox("RobotoMono Nerd Font 14", "", "#ffffff")
+
+local top_header     = wibox.widget {
+	{
+		{
+			{
+				add_task,
         {
-            image = WIDGET_DIR .. '/list-add-symbolic.svg',
-            resize = false,
-            widget = wibox.widget.imagebox
+          widget = wibox.container.margin,
+          left = dpi(300)
         },
-        top = 11,
-        left = 8,
-        right = 8,
-        layout = wibox.container.margin
-    },
-    shape = function(cr, width, height)
-        gears.shape.circle(cr, width, height, 12)
-    end,
-    widget = wibox.container.background
+				remove_all,
+				layout = wibox.layout.fixed.horizontal
+			},
+			layout = wibox.layout.align.horizontal
+		},
+		widget = wibox.container.margin,
+		top = dpi(7),
+		bottom = dpi(5),
+		right = dpi(5),
+		left = dpi(8),
+	},
+	widget = wibox.container.background,
+	bg = theme.primary_dark,
+	shape = function(cr, width, height)
+		gears.shape.partially_rounded_rect(cr, width, height, true, true, false, false, 7)
+	end,
 }
 
-add_button:connect_signal("button::press", function()
-    local pr = awful.widget.prompt()
+local prompt_box     = wibox.widget {
+	{
+		prompt_textbox,
+		widget = wibox.container.margin,
+		margins = dpi(15),
+		forced_width = dpi(410)
+	},
+	widget = wibox.container.background,
+	bg = theme.primary,
+	border_width = dpi(2),
+	border_color = theme.background,
+	shape = function(cr, width, height)
+		gears.shape.partially_rounded_rect(cr, width, height, false, false, true, true, 7)
+	end,
 
-    table.insert(rows, wibox.widget {
-        {
-            {
-                pr.widget,
-                spacing = 8,
-                layout = wibox.layout.align.horizontal
-            },
-            margins = 8,
-            layout = wibox.container.margin
-        },
-        bg = beautiful.bg_normal,
-        widget = wibox.container.background
-    })
-    awful.prompt.run{
-        prompt = "<b>New item</b>: ",
-        bg = beautiful.bg_normal,
-        bg_cursor = beautiful.fg_urgent,
-        textbox = pr.widget,
-        exe_callback = function(input_text)
-            if not input_text or #input_text == 0 then return end
-            spawn.easy_async(GET_TODO_ITEMS, function(stdout)
-                local res = json.decode(stdout)
-                table.insert(res.todo_items, {todo_item = input_text, status = false})
-                spawn.easy_async_with_shell("echo '" .. json.encode(res) .. "' > " .. STORAGE, function()
-                    spawn.easy_async(GET_TODO_ITEMS, function(items) update_widget(items) end)
-                end)
-            end)
-        end
-    }
-    todo_widget.widget:setup(rows)
+}
+local todocontainer  = wibox.widget {
+	spacing = dpi(0),
+	layout = wibox.layout.fixed.vertical,
+	-- layout = require("overflow").vertical,
+	visible = true,
+	step = 50,
+	scrollbar_enabled = true,
+	forced_height = dpi(500)
+}
+
+local todo_empty     = wibox.widget {
+	{
+		nil,
+		{
+			{
+				image = os.getenv("HOME") .. "/.config/awesome/popups/dashboard/home/todo_widgets/icons/todo.png",
+				widget = wibox.widget.imagebox,
+				forced_height = dpi(160),
+				forced_width = dpi(160),
+				resize = true
+			},
+			create_textbox("RobotoMono Nerd Font bold 20", "\nNo tasks to do", theme.primary_light),
+			layout = wibox.layout.fixed.vertical
+		},
+		nil,
+		layout = wibox.layout.align.vertical
+	},
+	widget = wibox.container.place,
+	forced_height = dpi(540)
+}
+
+local final_widget   = wibox.widget {
+	{
+		top_header,
+		{
+			todocontainer,
+			widget = wibox.container.background,
+			bg = theme.bg
+		},
+		prompt_box,
+		layout = wibox.layout.fixed.vertical
+	},
+	widget = wibox.container.margin,
+	top = dpi(2),
+	bottom = dpi(12),
+	left = dpi(12),
+	right = dpi(12)
+}
+
+todocontainer:insert(1, todo_empty)
+
+-- Make todo tasks
+local create_todo = function(text)
+	local todo_text       = create_textbox("RobotoMono Nerd Font 15", text, "#ffffff")
+	local complete        = create_textbox("RobotoMono Nerd Font 13", "  Done", "#ffffff")
+	local remove          = create_textbox("RobotoMono Nerd Font 13", " 󱘜 remove", "#ffffff")
+
+	local complete_button = wibox.widget { {
+		{
+			complete,
+			widget = wibox.container.place,
+		},
+		widget = wibox.container.margin,
+		margins = dpi(15)
+	},
+		widget = wibox.container.background,
+		bg = theme.bg_focus,
+		border_width = dpi(10),
+		border_color = "#30364f" }
+
+	local remove_button   = wibox.widget { {
+		{
+			remove,
+			widget = wibox.container.place,
+		},
+		widget = wibox.container.margin,
+		margins = dpi(15)
+	},
+		widget = wibox.container.background,
+		bg = theme.primary_light,
+		border_width = dpi(10),
+		border_color = "#30364f" }
+
+
+	local todo_template = wibox.widget {
+		{
+			{
+				todo_text,
+				widget = wibox.container.margin,
+				top = dpi(15),
+				bottom = dpi(15),
+				left = dpi(15),
+				right = dpi(15),
+				forced_width = dpi(410),
+			},
+			{
+				complete_button,
+				remove_button,
+				layout = wibox.layout.flex.horizontal
+			},
+			layout = wibox.layout.fixed.vertical
+		},
+		widget = wibox.container.background,
+		bg = "#30364f",
+		border_width = dpi(2),
+		border_color = theme.bg_normal
+	}
+
+	local hover_effects = function(buttons)
+		buttons:connect_signal("mouse::enter", function()
+			buttons.bg = "#26303b"
+		end)
+		buttons:connect_signal("mouse::leave", function()
+			buttons.bg = theme.primary_light
+		end)
+		buttons:connect_signal("mouse::release", function(_, _, _, button)
+			if button == 1 then
+				buttons.bg = theme.primary_light
+			end
+		end)
+		buttons:connect_signal("button::press", function(_, _, _, button)
+			if button == 1 then
+				buttons.bg = "#30425c"
+			end
+		end)
+	end
+
+	hover_effects(remove_button)
+	hover_effects(complete_button)
+
+	remove_button:connect_signal("button::release", function(_, _, _, button)
+		if button == 1 then
+			todocontainer:remove_widgets(todo_template)
+			if #todocontainer.children == 0 then
+				todocontainer:insert(1, todo_empty)
+			end
+		end
+	end)
+
+	complete_button:connect_signal("button::release", function(_, _, _, button)
+		if button == 1 then
+			todo_text.markup = '<span color="' ..
+					theme.primary_dark ..
+					'" font="' .. "RobotoMono Nerd Font 15" .. '">' .. "<s>" .. text .. "</s>" .. '</span>'
+		end
+	end)
+
+	return todo_template
+end
+
+
+
+-- Prompt run function
+local add_todo = function()
+	awful.prompt.run {
+		textbox = prompt_textbox,
+		exe_callback = function(input)
+			local new_todo = create_todo(input)
+			todocontainer:remove_widgets(todo_empty)
+			todocontainer:insert(1, new_todo)
+			prompt_textbox.markup = '<span color="#ffffff"' .. '" font="' .. "RobotoMono Nerd Font 14" .. '">' .. "   Add task" .. '</span>'
+		end
+	}
+end
+
+-- Add todo
+prompt_box:connect_signal("button::release", function(_, _, _, button)
+	if button == 1 then
+		add_todo()
+	end
 end)
-add_button:connect_signal("mouse::enter", function(c) c:set_bg(beautiful.bg_focus) end)
-add_button:connect_signal("mouse::leave", function(c) c:set_bg(beautiful.bg_normal) end)
 
-local function worker(user_args)
+add_task:connect_signal("button::release", function(_, _, _, button)
+	if button == 1 then
+		add_todo()
+	end
+end)
 
-    local args = user_args or {}
+--CLear all todo
+remove_all:connect_signal("button::release", function(_, _, _, button)
+	if button == 1 then
+		todocontainer:reset(todocontainer)
+		todocontainer:insert(1, todo_empty)
+	end
+end)
 
+--Scroll
+todocontainer:buttons(
+	gears.table.join(
+		awful.button({}, 4, nil, function()
+			if #todocontainer.children == 1 then
+				return
+			end
+			todocontainer:insert(1, todocontainer.children[#todocontainer.children])
+			todocontainer:remove(#todocontainer.children)
+		end),
 
-
-    function update_widget(stdout)
-    local result = json.decode(stdout)
-    if result == nil or result == '' then result = {} end
-    todo_widget:update_counter(result.todo_items)
-
-    -- Clear the existing rows
-        for i = 0, #rows do rows[i]=nil end
-
-    for _, row in ipairs(rows) do
-        todo_widget.widget:add(row)
-    end
-    local first_row = wibox.widget {
-        {
-            {widget = wibox.widget.textbox},
-            {
-                markup = '<span size="large" font_weight="bold" color="#ffffff">ToDo</span>',
-                align = 'center',
-                forced_width = 350, -- for horizontal alignment
-                forced_height = 40,
-                widget = wibox.widget.textbox
-            },
-            add_button,
-            spacing = 8,
-            layout = wibox.layout.fixed.horizontal
-        },
-        bg = theme.primary,
-        widget = wibox.container.background
-    }
-
-    table.insert(rows, first_row)
-
-    for i, todo_item in ipairs(result.todo_items) do
-        -- Create rows for each todo item
-        local checkbox = wibox.widget {
-            checked       = todo_item.status,
-            color         = beautiful.bg_normal,
-            paddings      = 2,
-            shape         = gears.shape.circle,
-            forced_width = 20,
-            forced_height = 20,
-            check_color = beautiful.fg_urgent,
-            widget        = wibox.widget.checkbox
-        }
-
-        checkbox:connect_signal("button::press", function(c)
-            c:set_checked(not c.checked)
-            todo_item.status = not todo_item.status
-            result.todo_items[i] = todo_item
-            spawn.easy_async_with_shell("echo '" .. json.encode(result) .. "' > " .. STORAGE, function ()
-                todo_widget:update_counter(result.todo_items)
-            end)
-        end)
+		awful.button({}, 5, nil, function()
+			if #todocontainer.children == 1 then
+				return
+			end
+			todocontainer:insert(#todocontainer.children + 1, todocontainer.children[1])
+			todocontainer:remove(1)
+		end)
+	)
+)
 
 
-        local trash_button = wibox.widget {
-            {
-                {    image = WIDGET_DIR .. '/window-close-symbolic.svg',
-                    resize = false,
-                    widget = wibox.widget.imagebox
-                },
-                margins = 5,
-                layout = wibox.container.margin
-            },
-            border_width = 1,
-            shape = function(cr, width, height)
-                gears.shape.circle(cr, width, height, 10)
-            end,
-            widget = wibox.container.background,
-            bg = theme.primary
-        }
 
-        trash_button:connect_signal("button::press", function()
-            table.remove(result.todo_items, i)
-            spawn.easy_async_with_shell("printf '" .. json.encode(result) .. "' > " .. STORAGE, function ()
-                spawn.easy_async(GET_TODO_ITEMS, function(items) update_widget(items) end)
-            end)
-        end)
-
-
-        local move_up = wibox.widget {
-            image = WIDGET_DIR .. '/chevron-up.svg',
-            resize = false,
-            widget = wibox.widget.imagebox
-        }
-
-        move_up:connect_signal("button::press", function()
-            local temp = result.todo_items[i]
-            result.todo_items[i] = result.todo_items[i-1]
-            result.todo_items[i-1] = temp
-            spawn.easy_async_with_shell("printf '" .. json.encode(result) .. "' > " .. STORAGE, function ()
-                spawn.easy_async(GET_TODO_ITEMS, function(items) update_widget(items) end)
-            end)
-        end)
-
-        local move_down = wibox.widget {
-            image = WIDGET_DIR .. '/chevron-down.svg',
-            resize = false,
-            widget = wibox.widget.imagebox
-        }
-
-        move_down:connect_signal("button::press", function()
-            local temp = result.todo_items[i]
-            result.todo_items[i] = result.todo_items[i+1]
-            result.todo_items[i+1] = temp
-            spawn.easy_async_with_shell("printf '" .. json.encode(result) .. "' > " .. STORAGE, function ()
-                spawn.easy_async(GET_TODO_ITEMS, function(items) update_widget(items) end)
-            end)
-        end)
-
-
-        local move_buttons = {
-            layout = wibox.layout.fixed.vertical
-        }
-
-        if i == 1 and #result.todo_items > 1 then
-            table.insert(move_buttons, move_down)
-        elseif i == #result.todo_items and #result.todo_items > 1 then
-            table.insert(move_buttons, move_up)
-        elseif #result.todo_items > 1 then
-            table.insert(move_buttons, move_up)
-            table.insert(move_buttons, move_down)
-        end
-
-        local row = wibox.widget {
-            {
-                {
-                    {
-                        checkbox,
-                        valign = 'center',
-                        layout = wibox.container.place,
-                    },
-                    {
-                        {
-                            text = todo_item.todo_item,
-                            align = 'left',
-                            widget = wibox.widget.textbox
-                        },
-                        left = 10,
-                        layout = wibox.container.margin
-                    },
-                    {
-                        {
-                            move_buttons,
-                            valign = 'center',
-                            layout = wibox.container.place,
-                        },
-                        {
-                            trash_button,
-                            valign = 'center',
-                            layout = wibox.container.place,
-                        },
-                        spacing = 8,
-                        layout = wibox.layout.align.horizontal
-                    },
-                    spacing = 8,
-                    layout = wibox.layout.align.horizontal
-                },
-                margins = 8,
-                layout = wibox.container.margin
-            },
-            bg = beautiful.bg_norma,
-            widget = wibox.container.background
-        }
-
-        row:connect_signal("mouse::enter", function(c) c:set_bg(beautiful.bg_focus) end)
-        row:connect_signal("mouse::leave", function(c) c:set_bg(beautiful.bg_normal) end)
-
-        table.insert(rows, row)
-    end
-
-    -- Setup the widget with the updated rows
-    todo_widget.widget:setup(rows)
-end
-
-    todo_widget.widget:buttons(
-            gears.table.join(
-                    awful.button({}, 1, function()
-                        -- if popup.visible then
-                        --     todo_widget.widget:set_bg('#00000000')
-                        --     popup.visible = not popup.visible
-                        -- else
-                        --     todo_widget.widget:set_bg(beautiful.bg_focus)
-                        --     popup:move_next_to(mouse.current_widget_geometry)
-                        -- end
-                    end)
-            )
-    )
-
-    spawn.easy_async(GET_TODO_ITEMS, function(stdout) update_widget(stdout) end)
-
-    return todo_widget.widget
-end
-
-if not gfs.file_readable(STORAGE) then
-    spawn.easy_async(string.format([[bash -c "dirname %s | xargs mkdir -p && echo '{\"todo_items\":{}}' > %s"]],
-    STORAGE, STORAGE))
-end
-
-return setmetatable(todo_widget, { __call = function(_, ...) return worker(...) end })
+return final_widget

@@ -118,8 +118,9 @@ local menu_popup = awful.popup {
                 widget = wibox.container.margin,
                 profile(),
             },
+
             {
-                todo(), -- Assuming this returns the todo widget
+                todo,
                 layout = wibox.layout.fixed.horizontal,
             },
             layout = wibox.layout.fixed.vertical
