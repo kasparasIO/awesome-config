@@ -1,13 +1,10 @@
 local beautiful = require("beautiful")
 local awful = require("awful")
 local gears = require("gears")
-local wibox = require("wibox")
-local create_taglist = require("widgets.taglist")
-local create_tasklist = require("widgets.tasklist")
-local textclock = require("widgets.textclock")
-local keyboardlayout = require("widgets.keyboard_layout")
 local topbar = require("widgets.topbar.topbar")
+require("widgets.bottom-launch.bottom_launcher")
 
+require("widgets.titlebar")
 
 local function set_wallpaper(s)
     -- Wallpaper
@@ -31,20 +28,10 @@ awful.screen.connect_for_each_screen(function(s)
     -- Each screen has its own tag table.
     awful.tag({ "1", "2", "3", "4", "5" }, s, awful.layout.layouts[1])
 
-    -- Create an imagebox widget which will contain an icon indicating which layout we're using.
-    -- We need one layoutbox per screen.
-    s.layoutbox = awful.widget.layoutbox(s)
-    s.layoutbox:buttons(gears.table.join(
-                           awful.button({ }, 1, function () awful.layout.inc( 1) end),
-                           awful.button({ }, 3, function () awful.layout.inc(-1) end),
-                           awful.button({ }, 4, function () awful.layout.inc( 1) end),
-                           awful.button({ }, 5, function () awful.layout.inc(-1) end)))
-    -- Create a taglist widget
-    s.taglist = create_taglist(s)
-
-    -- Create a tasklist widget
-    s.tasklist = create_tasklist(s)
-
-    -- topbar
   topbar(s)
+  -- new topbar
 end)
+
+client.connect_signal("focus", function(c) c.border_color = beautiful.primary_light
+  c.border_width = 1 end)
+client.connect_signal("unfocus", function(c) c.border_width = 0 end)

@@ -2,6 +2,7 @@ local awful = require("awful")
 local gears = require("gears")
 local menubar = require("menubar")
 local hotkeys_popup = require("awful.hotkeys_popup")
+local bottom_bar = require("widgets.bottom-launch.bottom_launcher")
 
 local M = {};
 local modkey  = "Mod4"
@@ -46,13 +47,22 @@ M.globalkeys = gears.table.join(
 
     awful.key({ modkey, "Control" }, "k", function () awful.screen.focus_relative(-1) end,
     {description = "focus the previous screen", group = "screen"}),
+
     awful.key({}, "Print", function () awful.spawn("flameshot gui") end,
     {description = "take screenshot", group = "custom"}),
     -- Standard program
     awful.key({ modkey}, "Return", function () awful.spawn(terminal) end,
     {description = "open a terminal", group = "launcher"}),
-    
+
     awful.key({modkey, "Control"}, "b", function() awful.spawn("chromium") end,
+    {description = "open browser", group = "custom"}),
+
+    awful.key({modkey, "Control"}, "o", function() 
+    if bottom_bar.visible then bottom_bar.visible = false
+    else 
+      bottom_bar.visible = true
+    end
+  end,
     {description = "open browser", group = "custom"}),
 
     awful.key({ modkey, "Control" }, "r", awesome.restart,

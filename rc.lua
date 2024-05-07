@@ -103,5 +103,4 @@ client.connect_signal("manage", function (c)
 end)
 
 -- Add a titlebar if titlebars_enabled is set to true in the rules.
-require("widgets.titlebar")
 awful.spawn("flameshot")
